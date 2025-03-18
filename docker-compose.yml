@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  yolo_api:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./app/static/uploads:/app/app/static/uploads
+    environment:
+      - FLASK_ENV=production
+      - YOLO_MODEL=yolov8n.pt
+      - YOLO_CONF=0.25
+      - MAX_CONTENT_LENGTH=16777216
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
