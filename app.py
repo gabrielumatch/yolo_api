@@ -1,10 +1,10 @@
 import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, url_for
 from werkzeug.utils import secure_filename
 import time
 from app.utils.yolo_detector import YOLODetector
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
 app.config['UPLOAD_FOLDER'] = 'app/static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
@@ -39,13 +39,16 @@ def detect_objects():
         
         file.save(filepath)
         
-        # Run detection on the image
+        # Run detection on the image and save the processed image
         results = detector.detect(filepath)
         
-        # Return detection results
+        # Generate URL for the processed image
+        image_url = url_for('static', filename=f'uploads/{filename}')
+        
+        # Return detection results with image URL
         return jsonify({
             'success': True,
-            'filename': filename,
+            'result_image': image_url,
             'detections': results
         })
     

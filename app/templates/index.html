@@ -4,130 +4,127 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YOLO Object Detection</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <style>
       body {
-        font-family: Arial, sans-serif;
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        line-height: 1.6;
-      }
-      h1 {
-        color: #333;
-        text-align: center;
-      }
-      .container {
-        border: 1px solid #ddd;
-        padding: 20px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-      }
-      .result-container {
+        background-color: #f8f9fa;
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        margin-top: 20px;
+      }
+      .main-content {
+        flex: 1;
+        padding: 2rem 0;
+      }
+      .upload-container {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .result-container {
+        margin-top: 2rem;
+        display: none;
       }
       .result-image {
         max-width: 100%;
-        border: 1px solid #ddd;
-        margin-bottom: 10px;
-      }
-      .detection-results {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-      }
-      .detection-results th,
-      .detection-results td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-      }
-      .detection-results th {
-        background-color: #f2f2f2;
-      }
-      .api-docs {
-        margin-top: 30px;
-      }
-      pre {
-        background-color: #f5f5f5;
-        padding: 10px;
         border-radius: 5px;
-        overflow-x: auto;
+      }
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 2rem 0;
+      }
+      .error-message {
+        display: none;
+        color: #dc3545;
+        margin-top: 1rem;
       }
     </style>
   </head>
   <body>
-    <h1>YOLO Object Detection</h1>
-    <form action="/detect" method="post" enctype="multipart/form-data">
-      <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif" />
-      <button type="submit">Detect Objects</button>
-    </form>
-
-    <div id="result" class="result-container" style="display: none">
-      <h2>Detection Results</h2>
-      <div id="image-container">
-        <img id="result-image" class="result-image" />
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="/">YOLO Object Detection</a>
       </div>
-      <table class="detection-results">
-        <thead>
-          <tr>
-            <th>Class</th>
-            <th>Confidence</th>
-            <th>Bounding Box</th>
-          </tr>
-        </thead>
-        <tbody id="detections-table">
-          <!-- Results will be populated here -->
-        </tbody>
-      </table>
-    </div>
+    </nav>
 
-    <div class="api-docs">
-      <h2>API Documentation</h2>
-      <p>
-        This API provides object detection using YOLO. Send a POST request to
-        the <code>/api/detect</code> endpoint with an image file to get
-        detection results.
-      </p>
+    <div class="main-content">
+      <div class="container">
+        <div class="upload-container">
+          <h2 class="text-center mb-4">Upload Image for Detection</h2>
 
-      <h3>Example Request</h3>
-      <pre>
-curl -X POST -F "file=@path/to/your/image.jpg" https://your-api-url/api/detect</pre
-      >
+          <form id="uploadForm" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="file" class="form-label">Select Image</label>
+              <input
+                type="file"
+                class="form-control"
+                id="file"
+                name="file"
+                accept=".png,.jpg,.jpeg,.gif"
+                required
+              />
+              <div class="form-text">
+                Supported formats: PNG, JPG, JPEG, GIF (max 16MB)
+              </div>
+            </div>
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary">
+                Detect Objects
+              </button>
+            </div>
+          </form>
 
-      <h3>Example Response</h3>
-      <pre>
-{
-  "success": true,
-  "detections": [
-    {
-      "class": "person",
-      "confidence": 0.92,
-      "bbox": [50, 120, 200, 380]
-    },
-    {
-      "class": "car",
-      "confidence": 0.87,
-      "bbox": [300, 200, 500, 350]
-    }
-  ]
-}</pre
-      >
+          <div class="loading">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Processing image...</p>
+          </div>
+
+          <div class="error-message"></div>
+
+          <div class="result-container">
+            <h3 class="text-center mb-3">Detection Results</h3>
+            <div class="text-center">
+              <img
+                id="resultImage"
+                class="result-image"
+                alt="Detection result"
+              />
+            </div>
+            <div id="detectionResults" class="mt-3">
+              <!-- Results will be displayed here -->
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
       document
-        .getElementById("upload-form")
-        .addEventListener("submit", async function (e) {
+        .getElementById("uploadForm")
+        .addEventListener("submit", async (e) => {
           e.preventDefault();
 
-          const fileInput = document.getElementById("image-upload");
-          if (!fileInput.files[0]) {
-            alert("Please select an image file");
-            return;
-          }
+          const fileInput = document.getElementById("file");
+          const loading = document.querySelector(".loading");
+          const resultContainer = document.querySelector(".result-container");
+          const errorMessage = document.querySelector(".error-message");
+          const resultImage = document.getElementById("resultImage");
+          const detectionResults = document.getElementById("detectionResults");
+
+          // Reset UI
+          loading.style.display = "block";
+          resultContainer.style.display = "none";
+          errorMessage.style.display = "none";
+          detectionResults.innerHTML = "";
 
           const formData = new FormData();
           formData.append("file", fileInput.files[0]);
@@ -140,49 +137,33 @@ curl -X POST -F "file=@path/to/your/image.jpg" https://your-api-url/api/detect</
 
             const data = await response.json();
 
-            if (data.success) {
-              displayResults(data);
-            } else {
-              alert(`Error: ${data.error}`);
+            if (!response.ok) {
+              throw new Error(data.error || "An error occurred");
             }
+
+            // Display results
+            resultImage.src = data.result_image;
+            resultContainer.style.display = "block";
+
+            // Display detection details
+            const resultsList = document.createElement("ul");
+            resultsList.className = "list-group";
+            data.detections.forEach((detection) => {
+              const li = document.createElement("li");
+              li.className = "list-group-item";
+              li.textContent = `${detection.class} (${(
+                detection.confidence * 100
+              ).toFixed(2)}%)`;
+              resultsList.appendChild(li);
+            });
+            detectionResults.appendChild(resultsList);
           } catch (error) {
-            console.error("Error:", error);
-            alert("An error occurred while processing your request");
+            errorMessage.textContent = error.message;
+            errorMessage.style.display = "block";
+          } finally {
+            loading.style.display = "none";
           }
         });
-
-      function displayResults(data) {
-        // Display the image
-        const resultImage = document.getElementById("result-image");
-        resultImage.src = `/static/uploads/${data.filename}`;
-
-        // Display the detections
-        const detectionsTable = document.getElementById("detections-table");
-        detectionsTable.innerHTML = "";
-
-        data.detections.forEach((detection) => {
-          const row = document.createElement("tr");
-
-          const classCell = document.createElement("td");
-          classCell.textContent = detection.class;
-
-          const confidenceCell = document.createElement("td");
-          confidenceCell.textContent =
-            (detection.confidence * 100).toFixed(2) + "%";
-
-          const bboxCell = document.createElement("td");
-          bboxCell.textContent = `[${detection.bbox.join(", ")}]`;
-
-          row.appendChild(classCell);
-          row.appendChild(confidenceCell);
-          row.appendChild(bboxCell);
-
-          detectionsTable.appendChild(row);
-        });
-
-        // Show the results container
-        document.getElementById("result").style.display = "flex";
-      }
     </script>
   </body>
 </html>

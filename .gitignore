@@ -24,6 +24,8 @@ var/
 venv/
 ENV/
 
+.env
+
 # YOLO
 *.pt
 runs/
