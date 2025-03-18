@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YOLO Object Detection API</title>
+    <title>YOLO Object Detection</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -59,14 +59,11 @@
     </style>
   </head>
   <body>
-    <h1>YOLO Object Detection API</h1>
-    <div class="container">
-      <h2>Upload an Image</h2>
-      <form id="upload-form" enctype="multipart/form-data">
-        <input type="file" id="image-upload" accept="image/*" required />
-        <button type="submit">Detect Objects</button>
-      </form>
-    </div>
+    <h1>YOLO Object Detection</h1>
+    <form action="/detect" method="post" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif" />
+      <button type="submit">Detect Objects</button>
+    </form>
 
     <div id="result" class="result-container" style="display: none">
       <h2>Detection Results</h2>
