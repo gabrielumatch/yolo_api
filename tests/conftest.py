@@ -1,6 +1,8 @@
 import os
 import pytest
 import tempfile
+import numpy as np
+import cv2
 from flask import Flask
 from app import create_app
 from app.utils.yolo_detector import YOLODetector
@@ -28,12 +30,13 @@ def runner(app):
 @pytest.fixture
 def sample_image():
     """Create a sample test image."""
-    # Create a 1x1 pixel PNG image
-    image_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x00\x00\x02\x00\x01\xe2\x21\xbc\x33\x00\x00\x00\x00IEND\xaeB`\x82'
-    
-    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
-        f.write(image_data)
-        return f.name
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Create a simple test image (100x100 black image)
+        img = np.zeros((100, 100, 3), dtype=np.uint8)
+        img_path = os.path.join(temp_dir, 'test.png')
+        cv2.imwrite(img_path, img)
+        yield img_path
 
 @pytest.fixture
 def mock_yolo_detector(mocker):

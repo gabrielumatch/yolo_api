@@ -1,58 +1,43 @@
 import os
-import numpy as np
+import torch
 from ultralytics import YOLO
 
 class YOLODetector:
-    def __init__(self, model_name="yolov8n.pt"):
-        """
-        Initialize the YOLO detector
-        
-        Args:
-            model_name: The name of the YOLO model to use
-        """
-        # Load the YOLO model
+    def __init__(self, model_name='yolov8n.pt'):
+        """Initialize YOLO detector with specified model."""
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.model = YOLO(model_name)
-        
+        self.model.to(self.device)
+
     def detect(self, image_path, conf=0.25):
         """
-        Detect objects in an image
+        Detect objects in an image.
         
         Args:
-            image_path: Path to the image file
-            conf: Confidence threshold for detections
+            image_path (str): Path to the image file
+            conf (float): Confidence threshold (0-1)
             
         Returns:
-            List of detection results with class, confidence, and bounding box
+            list: List of dictionaries containing detection results
+                 Each dictionary contains 'class', 'confidence', and 'bbox'
         """
-        # Check if file exists
-        if not os.path.exists(image_path):
-            return {"error": f"File not found: {image_path}"}
-        
-        # Run inference
-        results = self.model(image_path, conf=conf)
-        
-        # Process results
-        detections = []
-        
-        # For the first image result (assumes a single image was passed)
-        for result in results:
-            boxes = result.boxes
+        try:
+            # Run inference
+            results = self.model(image_path, conf=conf)[0]
             
-            for i, box in enumerate(boxes):
-                # Get box coordinates (convert to int for JSON serialization)
-                x1, y1, x2, y2 = [int(x) for x in box.xyxy[0].tolist()]
-                
-                # Get confidence
-                confidence = float(box.conf[0])
-                
-                # Get class name
-                class_id = int(box.cls[0])
-                class_name = result.names[class_id]
-                
-                detections.append({
-                    "class": class_name,
-                    "confidence": confidence,
-                    "bbox": [x1, y1, x2, y2]
-                })
-        
-        return detections 
+            # Process results
+            detections = []
+            for r in results.boxes.data.tolist():
+                x1, y1, x2, y2, confidence, class_id = r
+                detection = {
+                    'class': results.names[int(class_id)],
+                    'confidence': float(confidence),
+                    'bbox': [float(x1), float(y1), float(x2), float(y2)]
+                }
+                detections.append(detection)
+            
+            return detections
+            
+        except Exception as e:
+            print(f"Error during detection: {str(e)}")
+            raise 
