@@ -2,6 +2,20 @@
 
 A Flask-based API for object detection using YOLOv8. This API provides both a web interface and REST endpoints for object detection.
 
+## Examples
+
+Here are some examples of object detection using our API:
+
+### Example 1: Person Detection
+
+![Person Detection](https://github.com/gabrielumatch/yolo_api/blob/main/assets/1.png)
+
+<img src="https://github.com/gabrielumatch/yolo_api/blob/main/assets/1.png" alt="Welcome Screen" width="20%" />
+
+### Example 2: Multiple Objects Detection
+
+<img src="https://github.com/gabrielumatch/yolo_api/blob/main/assets/2.png" alt="Welcome Screen" width="20%" />
+
 ## Requirements
 
 - Python 3.10
